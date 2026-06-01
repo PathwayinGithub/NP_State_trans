@@ -1,0 +1,22 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python cache
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# MATLAB autosave / figures
+*.asv
+*.fig
+
+# Large local data and generated arrays
+*.mat
+*.npy
+*.npz
+*.pkl
+mice_example_data/
+
+# Generated RNN experiment outputs
+RNN_Modeling_YZ/experiments/
