@@ -1,4 +1,4 @@
-# autoencoder modelling of sequence path by top PLS dimensions
+# autoencoder modelling of WN sequence path by top PLS dimensions same for NW
 # prepare data
 
 import h5py
