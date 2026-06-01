@@ -37,8 +37,8 @@ This repository contains the main analysis scripts used for Neuropixels global b
 - `attractor_autoencoder.py`
   Autoencoder modeling of attractor manifolds from transition-related neural trajectories.
 
-- `WN_s74_bridge_path.py` and `NW_s74_bridge_path.py`
-  Example bridge-path autoencoder analyses for wake-to-NREM and NREM-to-wake transitions.
+- `seq_path_autoencoder.py`
+  Example bridge-path autoencoder analysis for sequence trajectories.
 
 ### RNN modeling
 
