@@ -1,10 +1,10 @@
 % analyze attractors at nrem or wake states
 clc;
 clear;
-addpath(genpath('X:\code'));
-subj='s38';
+addpath(genpath('~/code'));
+subj='s74';
 
-filepath='Y:\post_process_output\';
+filepath='~/';
 load(strcat(filepath,'update_brain_region_for_fig1.mat'),strcat(subj,'_cluster_channel_br'));
 load(strcat(filepath,'update_brain_region_for_fig1.mat'),strcat(subj,'_cluster_channel_name'));
 eval(strcat('tmp_cluster_channel_br=',subj,'_cluster_channel_br;'));
@@ -65,7 +65,7 @@ for  i = 1:length(idx_23)
     end
 end
 
-load(strcat(filepath,'SVM\',subj,'_SVM2.mat'), 'idx_good_presence');
+load(strcat(filepath,subj,'_SVM2.mat'), 'idx_good_presence');
 temp_spike_freq=temp_spike_freq(idx_good_presence,:);
 
 % for shuffled data

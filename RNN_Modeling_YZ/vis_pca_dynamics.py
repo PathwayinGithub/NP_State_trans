@@ -442,11 +442,11 @@ def fit_dynamics_pca(
     if len(ev) >= 3:
         print(f"      ▸ PC1+PC2+PC3 = {ev[:3].sum():.2%}")
     if ev[:2].sum() < 0.50:
-        print(f"      ⚠  PC1+PC2 < 50% — 强烈建议改用 PLS 降维")
+        print(f"      ⚠  PC1+PC2 < 50% — strongly recommend using PLS dimensionality reduction")
     elif ev[:2].sum() < 0.70:
-        print(f"      △  PC1+PC2 < 70% — 推荐尝试 PLS 验证")
+        print(f"      △  PC1+PC2 < 70% — recommend validating with PLS")
     else:
-        print(f"      ✓  PC1+PC2 ≥ 70% — 2D 足够")
+        print(f"      ✓  PC1+PC2 ≥ 70% — 2D is sufficient")
     return pca
 
 

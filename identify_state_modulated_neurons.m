@@ -3,6 +3,11 @@
 %% load files
 tic
 
+subj='s74';
+filepath='~/';
+matfile=strcat(filepath,subj,'_postprocess_0.5s.mat');
+load(matfile,'start_time','labels','info',strcat(subj,'_spike_freq_good'));
+eval(strcat('spike_freq_good=',subj,'_spike_freq_good;'));
 
 period=10;
 bin=0.5;% s
@@ -11,10 +16,10 @@ skip_time=0.4*3600;
 stop_time=3.375*3600;
 
 
-s98_NW_z_mean_all=[];
-s98_NR_z_mean_all=[];
-s98_RW_z_mean_all=[];
-s98_WN_z_mean_all=[];
+s74_NW_z_mean_all=[];
+s74_NR_z_mean_all=[];
+s74_RW_z_mean_all=[];
+s74_WN_z_mean_all=[];
 
 
 % 1 = REM sleep, 2 = wakefulness, 3 = NREM sleep, 4 = undefined
@@ -30,7 +35,7 @@ idx_WN_time=[];
 idx_NR_time=[];
 
 
-labels_temp=labels; % attention锛? use labels锛? not labels_i
+labels_temp=labels; % use labels, not labels_i
 labels_temp(labels_temp==3)=5;
 labels_temp(labels_temp==4)=10;
 labels_diff=diff(labels_temp);
@@ -94,10 +99,10 @@ tempWNds_z=[];
 
 % WAKE TO NREM
 for i=1:length(idx_WN_time)
-    tempWNds(:,:,i)=s98_spike_freq_good(:,round(idx_WN_time(i)/bin)-period/bin+1:round(idx_WN_time(i)/bin)+period/bin);
+    tempWNds(:,:,i)=spike_freq_good(:,round(idx_WN_time(i)/bin)-period/bin+1:round(idx_WN_time(i)/bin)+period/bin);
     tempWNds_z(:,:,i)=zscore(tempWNds(:,:,i),0,2);
 end
-s98_WN_z_mean_all=nanmean(tempWNds_z,3);
+s74_WN_z_mean_all=nanmean(tempWNds_z,3);
 
 temp_mean1=mean(tempWNds_z(:,6:15,:),2);
 temp_mean2=mean(tempWNds_z(:,26:35,:),2);
@@ -107,16 +112,16 @@ for i = 1:size(tempWNds_z,1)
 end
 WN_FDR = mafdr(WN_pvalue,'BHFDR','true');
 temp_T_m_WN_modified=temp_T_m(find(WN_FDR<=0.001));
-s98_idx_WN_modified(:,1)=find(WN_FDR<=0.001)';%good idx中NW modified neurons
-s98_idx_WN_modified(find(temp_T_m_WN_modified>0),2)=1; %前一个state高的赋1，后一个高的赋0
+s74_idx_WN_modified(:,1)=find(WN_FDR<=0.001)';% modified neuron indices among good units
+s74_idx_WN_modified(find(temp_T_m_WN_modified>0),2)=1; % assign 1 if the previous state is higher, otherwise 0
 
 
 % NREM TO WAKE
 for i=1:length(idx_NW_time)
-    tempNWds(:,:,i)=s98_spike_freq_good(:,round(idx_NW_time(i)/bin)-period/bin+1:round(idx_NW_time(i)/bin)+period/bin);
+    tempNWds(:,:,i)=spike_freq_good(:,round(idx_NW_time(i)/bin)-period/bin+1:round(idx_NW_time(i)/bin)+period/bin);
     tempNWds_z(:,:,i)=zscore(tempNWds(:,:,i),0,2);
 end
-s98_NW_z_mean_all=nanmean(tempNWds_z,3);
+s74_NW_z_mean_all=nanmean(tempNWds_z,3);
 
 temp_mean1=mean(tempNWds_z(:,6:15,:),2);
 temp_mean2=mean(tempNWds_z(:,26:35,:),2);
@@ -126,16 +131,16 @@ for i = 1:size(tempNWds_z,1)
 end
 NW_FDR = mafdr(NW_pvalue,'BHFDR','true');
 temp_T_m_NW_modified=temp_T_m(find(NW_FDR<=0.001));
-s98_idx_NW_modified(:,1)=find(NW_FDR<=0.001)';%good idx中NW modified neurons
-s98_idx_NW_modified(find(temp_T_m_NW_modified>0),2)=1; %前一个state高的赋1，后一个高的赋0
+s74_idx_NW_modified(:,1)=find(NW_FDR<=0.001)';% modified neuron indices among good units
+s74_idx_NW_modified(find(temp_T_m_NW_modified>0),2)=1; % assign 1 if the previous state is higher, otherwise 0
 
 % NREM TO REM
 if mean(idx_NR)>0
     for i=1:length(idx_NR_time)
-        tempNRds(:,:,i)=s98_spike_freq_good(:,round(idx_NR_time(i)/bin)-period/bin+1:round(idx_NR_time(i)/bin)+period/bin);
+        tempNRds(:,:,i)=spike_freq_good(:,round(idx_NR_time(i)/bin)-period/bin+1:round(idx_NR_time(i)/bin)+period/bin);
         tempNRds_z(:,:,i)=zscore(tempNRds(:,:,i),0,2);
     end
-    s98_NR_z_mean_all=nanmean(tempNRds_z,3);
+    s74_NR_z_mean_all=nanmean(tempNRds_z,3);
     
     temp_mean1=mean(tempNRds_z(:,6:15,:),2);
     temp_mean2=mean(tempNRds_z(:,26:35,:),2);
@@ -145,15 +150,15 @@ if mean(idx_NR)>0
     end
     NR_FDR = mafdr(NR_pvalue,'BHFDR','true');
     temp_T_m_NR_modified=temp_T_m(find(NR_FDR<=0.001));
-    s98_idx_NR_modified(:,1)=find(NR_FDR<=0.001)';%good idx中NW modified neurons
-    s98_idx_NR_modified(find(temp_T_m_NR_modified>0),2)=1; %前一个state高的赋1，后一个高的赋0
+    s74_idx_NR_modified(:,1)=find(NR_FDR<=0.001)';% modified neuron indices among good units
+    s74_idx_NR_modified(find(temp_T_m_NR_modified>0),2)=1; % assign 1 if the previous state is higher, otherwise 0
     
     % REM TO WAKE
     for i=1:length(idx_RW_time)
-        tempRWds(:,:,i)=s98_spike_freq_good(:,round(idx_RW_time(i)/bin)-period/bin+1:round(idx_RW_time(i)/bin)+period/bin);
+        tempRWds(:,:,i)=spike_freq_good(:,round(idx_RW_time(i)/bin)-period/bin+1:round(idx_RW_time(i)/bin)+period/bin);
         tempRWds_z(:,:,i)=zscore(tempRWds(:,:,i),0,2);
     end
-    s98_RW_z_mean_all=nanmean(tempRWds_z,3);
+    s74_RW_z_mean_all=nanmean(tempRWds_z,3);
     
     temp_mean1=mean(tempRWds_z(:,6:15,:),2);
     temp_mean2=mean(tempRWds_z(:,26:35,:),2);
@@ -163,8 +168,8 @@ if mean(idx_NR)>0
     end
     RW_FDR = mafdr(RW_pvalue,'BHFDR','true');
     temp_T_m_RW_modified=temp_T_m(find(RW_FDR<=0.001));
-    s98_idx_RW_modified(:,1)=find(RW_FDR<=0.001)';%good idx中NW modified neurons
-    s98_idx_RW_modified(find(temp_T_m_RW_modified>0),2)=1; %前一个state高的赋1，后一个高的赋0
+    s74_idx_RW_modified(:,1)=find(RW_FDR<=0.001)';% modified neuron indices among good units
+    s74_idx_RW_modified(find(temp_T_m_RW_modified>0),2)=1; % assign 1 if the previous state is higher, otherwise 0
 end
 
 toc

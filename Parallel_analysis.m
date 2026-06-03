@@ -1,5 +1,5 @@
 %s74 parallel analysis
-load('~\NW_s74_PLS.mat', 'seq_freq_traces');
+load('~/NW_s74_PLS.mat', 'seq_freq_traces');
 [cof sco lat]=pca(seq_freq_traces');
 
 shuffle_num=1000;

@@ -5,8 +5,15 @@ import h5py
 import json
 import numpy as np
 import torch
+from pathlib import Path
 from torch.utils.data import Dataset
 from sklearn.preprocessing import StandardScaler
+
+
+SUBJ = 's74'
+DATA_FILE = f'~/WN_{SUBJ}_proj_4.mat'
+MODEL_FILE = f'~/{SUBJ}_WN_bridge_path_AEmodel.pth'
+TRAJECTORY_POINTS_FILE = '~/WN_all_trajectory_points.npy'
 
 
 SEED=1234
@@ -15,8 +22,8 @@ random.seed(SEED)
 np.random.seed(SEED)
 
 torch.manual_seed(SEED)
-torch.cuda.manual_seed(SEED) # 适用于显卡训练
-torch.cuda.manual_seed_all(SEED) # 适用于多显卡训练
+torch.cuda.manual_seed(SEED) # for GPU training
+torch.cuda.manual_seed_all(SEED) # for multi-GPU training
 
 from torch.backends import cudnn
 cudnn.benchmark = False
@@ -27,8 +34,14 @@ b = np.arange(0, 86)
 result = b[~np.isin(b, a)]
 
 print(result)
+
+
+def resolve_path(file_path):
+    return str(Path(file_path).expanduser())
+
+
 def load_data(file_path):
-    with h5py.File(file_path, 'r') as file:
+    with h5py.File(resolve_path(file_path), 'r') as file:
         traces_trials = file['X_proj_trials'][:,:,:]
         all_trials = traces_trials
         train_trials = traces_trials[result,:,:]
@@ -40,7 +53,7 @@ def load_data(file_path):
     }
     return data_dic
 
-data_dic = load_data('~/WN_s74_proj_4.mat')
+data_dic = load_data(DATA_FILE)
 len_trials = np.shape(data_dic['train_trials'])[1]
 num_trials= np.shape(data_dic['train_trials'])[0]
 print(data_dic['train_trials'].shape)
@@ -120,8 +133,8 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from torchvision import transforms
 torch.manual_seed(SEED)
-torch.cuda.manual_seed(SEED) # 适用于显卡训练
-torch.cuda.manual_seed_all(SEED) # 适用于多显卡训练
+torch.cuda.manual_seed(SEED) # for GPU training
+torch.cuda.manual_seed_all(SEED) # for multi-GPU training
 class autoencoder(nn.Module):
     def __init__(self, num_cells, latent_dim):
         super(autoencoder, self).__init__()
@@ -166,7 +179,7 @@ dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,worker_i
 # load model
 # create a same structure before load
 model = autoencoder(cell_nums, latent_dim=latent_dim).cuda()
-model.load_state_dict(torch.load('X:/figures_resorces/figures_paper/version4/Fig4/WN_bridge_path_AEmodel.pth'))
+model.load_state_dict(torch.load(resolve_path(MODEL_FILE)))
 model.eval()
 
 num_epochs = 100
@@ -190,7 +203,7 @@ for epoch in range(num_epochs):
     print('epoch [{}/{}], loss:{:.7f}'
           .format(epoch + 1, num_epochs, total_loss/len(dataloader.dataset)))
 
-#torch.save(model.state_dict(), '~/sxx_WN_bridge_path_AEmodel.pth')
+#torch.save(model.state_dict(), resolve_path(MODEL_FILE))
 
 output = model(torch.from_numpy(traces_trials_t).to(dtype=torch.float).cuda()) # gt
 output_latent = model.encoder(torch.from_numpy(traces_trials_t).to(dtype=torch.float).cuda())
@@ -497,19 +510,19 @@ cosine_sim_average_all=np.zeros([output_latent_tp1_trials.shape[0],1])
 dist_evolve_all=np.zeros([output_latent_tp1_trials.shape[0],1])
 dist_average_all=np.zeros([output_latent_tp1_trials.shape[0],1])
 for k in range(output_latent_tp1_trials.shape[0]):
-    output_latent_tp1_average_seq=output_latent_tp1_average[90:210,:] #sequence区段的average路径
-    tmp_trial_trajectory=output_latent_tp1_trials[k,90:210,:] # individual trials 真实数据
+    output_latent_tp1_average_seq=output_latent_tp1_average[90:210,:] # average path during the sequence period
+    tmp_trial_trajectory=output_latent_tp1_trials[k,90:210,:] # real data from individual trials
 
     np.random.seed(42)
     random_num=30
     local_evolve_num=10 #cycle num
-    indices = np.random.choice(tmp_trial_trajectory.shape[0]-local_evolve_num, random_num, replace=False)  # 生成不重复的索引
+    indices = np.random.choice(tmp_trial_trajectory.shape[0]-local_evolve_num, random_num, replace=False)  # generate non-repeating indices
 
     tmp_trial_trajectory_r=np.zeros([random_num,local_evolve_num,2])
     output_latent_tp1_average_seq_r=np.zeros([random_num,local_evolve_num,2])
     for i in range(random_num):
-        tmp_trial_trajectory_r[i,:,:]=tmp_trial_trajectory[indices[i]+1:indices[i]+1+local_evolve_num,:] #真实数据随机取样后
-        output_latent_tp1_average_seq_r[i,:,:]=output_latent_tp1_average_seq[indices[i]+1:indices[i]+1+local_evolve_num,:] #average 路径随机取样后
+        tmp_trial_trajectory_r[i,:,:]=tmp_trial_trajectory[indices[i]+1:indices[i]+1+local_evolve_num,:] # sampled real data
+        output_latent_tp1_average_seq_r[i,:,:]=output_latent_tp1_average_seq[indices[i]+1:indices[i]+1+local_evolve_num,:] # sampled average path
 
 
     start_point = tmp_trial_trajectory[indices]
@@ -521,7 +534,7 @@ for k in range(output_latent_tp1_trials.shape[0]):
             tmp_output_tp = model.decoder(torch.from_numpy(tmp_latent).to(dtype=torch.float).cuda())
             tmp_output_tp = tmp_output_tp.cpu().detach().numpy()
             tmp_latent_tp = model.encoder(torch.from_numpy(tmp_output_tp).to(dtype=torch.float).cuda())
-            evolve_local_trajectory[i, j+1, :] = tmp_latent_tp.cpu().detach().numpy() #随机取样点迭代数据
+            evolve_local_trajectory[i, j+1, :] = tmp_latent_tp.cpu().detach().numpy() # evolved data from sampled points
     evolve_local_trajectory=evolve_local_trajectory[:,1:,:]
 
     #cosine similarity
@@ -608,7 +621,7 @@ plt.show(block=True)
 
 
 #prob. landscape
-#all_trajectory_points=np.load('~/WN_all_trajectory_points.npy')
+#all_trajectory_points=np.load(resolve_path(TRAJECTORY_POINTS_FILE))
 num_pixel=100
 x_bottom=-1.1
 x_upper=1.2
@@ -642,7 +655,7 @@ for i in range(0,random_num):
         tmp_latent_tp = model.encoder(torch.from_numpy(tmp_output_tp).to(dtype=torch.float).cuda())
         tmp_trajectory[j + 1, :] = tmp_latent_tp.cpu().detach().numpy()
     all_trajectory_points[i,:,:]=tmp_trajectory
-#np.save("X:/figures_resorces/figures_paper/version3/Fig4_v3/WN_all_trajectory_points.npy", all_trajectory_points)
+#np.save(resolve_path(TRAJECTORY_POINTS_FILE), all_trajectory_points)
 
 
 all_flat=all_trajectory_points.reshape(-1,2)

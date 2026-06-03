@@ -2,12 +2,12 @@
 % This code used before other analysis: prepare data and single unit
 % quality control. save as sxx_postprocess_0.5s.mat
 
-addpath(genpath('X:\code'));
+addpath(genpath('~/code'));
 %parameters
-path="X:\s102_g0\";
-subj="s102";
+path="~/s74_g0/";
+subj="s74";
 gates="_g0";
-eegemg='s102-241107-120944\';
+eegemg='s74_eegemg/';
 probes=["imec0","imec1","imec2","imec3"];
 drug="iso";
 anesth_time=33210;

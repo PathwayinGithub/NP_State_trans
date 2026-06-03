@@ -6,8 +6,15 @@ import h5py
 import json
 import numpy as np
 import torch
+from pathlib import Path
 from torch.utils.data import Dataset
 from sklearn.preprocessing import StandardScaler
+
+
+SUBJ = 's74'
+DATA_FILE = f'~/{SUBJ}_pc12_spike_trials_WN.mat'
+DATASET_NAME = 'pc12_spike_trials'
+MODEL_FILE = f'~/{SUBJ}_WN_attractor_AEmodel.pth'
 
 
 SEED=1234
@@ -24,9 +31,13 @@ cudnn.benchmark = False
 cudnn.deterministic = True
 
 
+def resolve_path(file_path):
+    return str(Path(file_path).expanduser())
+
+
 def load_data(file_path):
-    with h5py.File(file_path, 'r') as file:
-        traces_trials = file['sxx_pc12_spike_trials'][:,:,:]
+    with h5py.File(resolve_path(file_path), 'r') as file:
+        traces_trials = file[DATASET_NAME][:,:,:]
         all_trials = traces_trials
         train_trials = traces_trials[0:18,:,:] # according to trial num
         test_trials = traces_trials[18:,:,:]
@@ -37,7 +48,7 @@ def load_data(file_path):
     }
     return data_dic
 
-data_dic = load_data('~/sxx_pc12_spike_trials_WN.mat')
+data_dic = load_data(DATA_FILE)
 len_trials = np.shape(data_dic['train_trials'])[1]
 num_trials= np.shape(data_dic['train_trials'])[0]
 print(data_dic['train_trials'].shape)
@@ -117,8 +128,8 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from torchvision import transforms
 torch.manual_seed(SEED)
-torch.cuda.manual_seed(SEED) # 适用于显卡训练
-torch.cuda.manual_seed_all(SEED) # 适用于多显卡训练
+torch.cuda.manual_seed(SEED) # for GPU training
+torch.cuda.manual_seed_all(SEED) # for multi-GPU training
 class autoencoder(nn.Module):
     def __init__(self, num_cells, latent_dim):
         super(autoencoder, self).__init__()
@@ -164,7 +175,7 @@ dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,worker_i
 # load model
 # create a same model structure before load
 model = autoencoder(cell_nums, latent_dim=latent_dim).cuda()
-model.load_state_dict(torch.load('~/sxx_WN_attractor_AEmodel.pth'))
+model.load_state_dict(torch.load(resolve_path(MODEL_FILE)))
 model.eval()
 
 num_epochs = 100
@@ -189,7 +200,7 @@ for epoch in range(num_epochs):
           .format(epoch + 1, num_epochs, total_loss/len(dataloader.dataset)))
 
 #save model
-#torch.save(model.state_dict(), '~/sxx_WN_attractor_AEmodel.pth')
+#torch.save(model.state_dict(), resolve_path(MODEL_FILE))
 
 
 output = model(torch.from_numpy(traces_trials_t).to(dtype=torch.float).cuda()) # gt
@@ -200,7 +211,7 @@ output_pred=output_pred.cpu().detach().numpy()
 output_latent_tp1=model.encoder(torch.from_numpy(test_trials_t).to(dtype=torch.float).cuda()) # test
 output_latent_tp1=output_latent_tp1.cpu().detach().numpy()
 output_latent_tp1_trials=output_latent_tp1[:,:].reshape([-1,len_trials-1,latent_dim])
-#np.save('~/WN_attractor_output_pred_shuffle.npy', output_pred)
+#np.save(resolve_path(f'~/{SUBJ}_WN_attractor_output_pred_shuffle.npy'), output_pred)
 
 
 
@@ -393,7 +404,7 @@ plt.show(block=True)
 #plt.savefig("test.svg", dpi=300, format="svg")
 
 
-#################### local 多步迭代的dist和cosine similarity比较
+#################### compare distance and cosine similarity for local multi-step evolution
 def MSE(a, b):
     return np.mean(np.sum((a - b) ** 2,1))
 
@@ -406,11 +417,11 @@ for k in range(output_latent_tp1_trials.shape[0]):
     np.random.seed(42)
     random_num=100
     local_evolve_num=10 #cycle num for each point
-    indices = np.random.choice(tmp_trial_trajectory.shape[0]-local_evolve_num, random_num, replace=False)  # 生成不重复的索引
+    indices = np.random.choice(tmp_trial_trajectory.shape[0]-local_evolve_num, random_num, replace=False)  # generate non-repeating indices
 
     tmp_trial_trajectory_r=np.zeros([random_num,local_evolve_num,2])
     for i in range(random_num):
-        tmp_trial_trajectory_r[i,:,:]=tmp_trial_trajectory[indices[i]+1:indices[i]+1+local_evolve_num,:] #真实数据随机取样后
+        tmp_trial_trajectory_r[i,:,:]=tmp_trial_trajectory[indices[i]+1:indices[i]+1+local_evolve_num,:] # sampled real data
 
 
     start_point = tmp_trial_trajectory[indices]
@@ -425,7 +436,7 @@ for k in range(output_latent_tp1_trials.shape[0]):
             evolve_local_trajectory[i, j+1, :] = tmp_latent_tp.cpu().detach().numpy()
     evolve_local_trajectory=evolve_local_trajectory[:,1:,:]
 
-    #计算路径欧氏距离
+    # calculate path Euclidean distance
     dist_evolve = np.zeros([random_num, 1])
     for i in range(random_num):
         tmp_real_trajectory = tmp_trial_trajectory_r[i, :, :]

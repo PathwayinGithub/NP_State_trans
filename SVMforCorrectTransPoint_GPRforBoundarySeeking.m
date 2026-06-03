@@ -5,10 +5,10 @@
 %% prepare data
 clc;
 clear;
-addpath(genpath('X:\code'));
-subj='s104';
+addpath(genpath('~/code'));
+subj='s74';
 
-filepath='~\post_process_output\';
+filepath='~/';
 load(strcat(filepath,'start_stop_SVM.mat'));
 load(strcat(filepath,'update_brain_region_for_fig1.mat'),strcat(subj,'_cluster_channel_br'));
 load(strcat(filepath,'update_brain_region_for_fig1.mat'),strcat(subj,'_cluster_channel_name'));
@@ -333,7 +333,7 @@ PE= SeqIndexDB(peak_m,15);
 num_trials=length(idx_medium23_good_curve);
 PE_bootstrap=[];
 parfor sample_num=1:10000
-    randomOrder=randperm(size(temp_spike_freq_slid_3,2)-(left_win+right_win),num_trials)+left_win; % 排除边界问题
+    randomOrder=randperm(size(temp_spike_freq_slid_3,2)-(left_win+right_win),num_trials)+left_win; % avoid boundary cases
     pseudo_trial_freq=zeros(size(temp_spike_freq_slid_3,1),left_win+right_win,num_trials);
     for m = 1:num_trials
         pseudo_trial_freq(:,:,m)=temp_spike_freq_slid_3(:,randomOrder(m)-left_win:randomOrder(m)+right_win-1);

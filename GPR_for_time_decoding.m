@@ -1,9 +1,9 @@
 %% GPR time decoding
 
 subj='s74';
-addpath(genpath('~\code'));
-filepath='~\post_process_output\';
-load(strcat(filepath,'SVM\',subj,'_SVM_wake2.mat'),'temp_spike_freq','trans_tmp_idx','I_trans','left_win','right_win','idx_good_presence','averaged_freq_sorted','neuron_trans_freq_trans');
+addpath(genpath('~/code'));
+filepath='~/';
+load(strcat(filepath,subj,'_SVM_wake2.mat'),'temp_spike_freq','trans_tmp_idx','I_trans','left_win','right_win','idx_good_presence','averaged_freq_sorted','neuron_trans_freq_trans');
 load(strcat(filepath,'update_brain_region_for_fig1.mat'), strcat(subj,'_cluster_channel_br'),strcat(subj,'_cluster_channel_name'));
 load(strcat(filepath,'br_id_color_fig1.mat'));
 

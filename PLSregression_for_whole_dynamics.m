@@ -1,10 +1,10 @@
 
 % PLSregression of wake to nrem sequence, same for NW
-addpath(genpath('~\code'));
+addpath(genpath('~/code'));
 subj='s74';
-filepath_main='~\post_process_output\';
+filepath_main='~/';
 load(strcat(filepath_main,'update_brain_region_for_fig1.mat'), strcat(subj,'_cluster_channel_br'),strcat(subj,'_cluster_channel_name'));
-load(strcat(filepath_main,'\SVM\',subj,'_SVM2.mat'));
+load(strcat(filepath_main,subj,'_SVM2.mat'));
 eval(strcat('tmp_cluster_channel_br=',subj,'_cluster_channel_br(idx_good_presence,:);'));
 tmp_cluster_channel_br=tmp_cluster_channel_br(trans_tmp_idx,:);
 tmp_cluster_channel_br=tmp_cluster_channel_br(I_trans,:);

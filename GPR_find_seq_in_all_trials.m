@@ -1,12 +1,12 @@
 % code using GPR model trained by good curves trials to find seq in other
 % save to sxx_SVM2.mat(WN)/sxx_SVM_wake2.mat(NW);
 % trials
-addpath(genpath('X:\code'));
+addpath(genpath('~/code'));
 subj='s74';
-filepath='~\post_process_output\SVM\';
+filepath='~/';
 %prepare data for GPRmodel trans process predict
 load(strcat(filepath,subj,'_SVM.mat'),'temp_spike_freq','trans_tmp_idx','table_states_corr','I_trans','idx_medium23','idx_medium23_good_curve','left_win','right_win','idx_good_presence');
-load('~\post_process_output\update_brain_region_for_fig1.mat', strcat(subj,'_cluster_channel_br'),strcat(subj,'_cluster_channel_name'));
+load(strcat(filepath,'update_brain_region_for_fig1.mat'), strcat(subj,'_cluster_channel_br'),strcat(subj,'_cluster_channel_name'));
 eval(strcat('tmp_cluster_channel_br=',subj,'_cluster_channel_br;'));
 eval(strcat('tmp_cluster_channel_name=',subj,'_cluster_channel_name;'));
 
@@ -123,7 +123,7 @@ PE= SeqIndexDB(peak_m,10);
 num_trials=length(idx_medium23);
 PE_bootstrap=[];
 parfor sample_num=1:10000
-    randomOrder=randperm(size(temp_spike_freq_slid,2)-(left_win+right_win),num_trials)+ceil((left_win+right_win)/2); % 排除边界问题
+    randomOrder=randperm(size(temp_spike_freq_slid,2)-(left_win+right_win),num_trials)+ceil((left_win+right_win)/2); % avoid boundary cases
     pseudo_trial_freq=zeros(size(temp_spike_freq_slid,1),left_win+right_win,num_trials);
     for m = 1:num_trials
         pseudo_trial_freq(:,:,m)=temp_spike_freq_slid(:,randomOrder(m)-floor((left_win+right_win)/2):randomOrder(m)+ceil((left_win+right_win)/2)-1);
@@ -146,7 +146,7 @@ PE_threshold=[];
 PE_p_value=[];
 for j = 1:size(PE_bootstrap,1)
     [B_PE,~]=sort(PE_bootstrap(j,:),'descend');
-    PE_threshold(1,j)=B_PE(3000);%在分布前30%
+    PE_threshold(1,j)=B_PE(3000);% top 30% of the bootstrap distribution
     PE_p_value(j)=sum(PE_bootstrap(j,:)>=PE(j))/10000;
 end
 
