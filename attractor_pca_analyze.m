@@ -1,10 +1,9 @@
 % analyze attractors at nrem or wake states
 clc;
 clear;
-addpath(genpath('~/code'));
 subj='s74';
 
-filepath='~/';
+filepath='~\mice_example_data\';
 load(strcat(filepath,'update_brain_region_for_fig1.mat'),strcat(subj,'_cluster_channel_br'));
 load(strcat(filepath,'update_brain_region_for_fig1.mat'),strcat(subj,'_cluster_channel_name'));
 eval(strcat('tmp_cluster_channel_br=',subj,'_cluster_channel_br;'));

@@ -1,9 +1,10 @@
 % code using GPR model trained by good curves trials to find seq in other
 % save to sxx_SVM2.mat(WN)/sxx_SVM_wake2.mat(NW);
-% trials
-addpath(genpath('~/code'));
+% You can directly load s74_SVM2.mat(WN) for example sequence plot without
+% retraining the models.
+
 subj='s74';
-filepath='~/';
+filepath='~\mice_example_data\';
 %prepare data for GPRmodel trans process predict
 load(strcat(filepath,subj,'_SVM.mat'),'temp_spike_freq','trans_tmp_idx','table_states_corr','I_trans','idx_medium23','idx_medium23_good_curve','left_win','right_win','idx_good_presence');
 load(strcat(filepath,'update_brain_region_for_fig1.mat'), strcat(subj,'_cluster_channel_br'),strcat(subj,'_cluster_channel_name'));

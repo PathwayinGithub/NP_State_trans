@@ -12,9 +12,9 @@ from sklearn.preprocessing import StandardScaler
 
 
 SUBJ = 's74'
-DATA_FILE = f'~/{SUBJ}_pc12_spike_trials_WN.mat'
+DATA_FILE = f'~/mice_example_data/{SUBJ}_pc12_spike_trials_WN.mat'
 DATASET_NAME = 'pc12_spike_trials'
-MODEL_FILE = f'~/{SUBJ}_WN_attractor_AEmodel.pth'
+MODEL_FILE = f'~/mice_example_data//{SUBJ}_WN_attractor_AEmodel.pth'
 
 
 SEED=1234
@@ -178,6 +178,8 @@ model = autoencoder(cell_nums, latent_dim=latent_dim).cuda()
 model.load_state_dict(torch.load(resolve_path(MODEL_FILE)))
 model.eval()
 
+
+#####################load model and skip the steps for training
 num_epochs = 100
 for epoch in range(num_epochs):
     total_loss = 0
@@ -201,7 +203,7 @@ for epoch in range(num_epochs):
 
 #save model
 #torch.save(model.state_dict(), resolve_path(MODEL_FILE))
-
+############################
 
 output = model(torch.from_numpy(traces_trials_t).to(dtype=torch.float).cuda()) # gt
 output_latent = model.encoder(torch.from_numpy(traces_trials_t).to(dtype=torch.float).cuda())
@@ -232,35 +234,6 @@ for r in range(row):
 
         axs[r,c].set_title(f'cell {cellidx}')
 plt.show(block=True)
-
-# test
-a = np.reshape(output_pred[:,:],(-1,len_trials-1,cell_nums))
-a = np.mean(a,0)
-plt.figure()
-plt.imshow(a.T,aspect = "auto",cmap = 'jet',vmin=-0.5,vmax=0.5,interpolation = 'none')
-plt.title('test pred',fontsize= 20)
-
-b = np.reshape(test_trials_tp[:,:],(-1,len_trials-1,cell_nums))
-b = np.mean(b,0)
-plt.figure()
-plt.imshow(b.T,aspect = "auto",cmap = 'jet',vmin=-0.5,vmax=0.5,interpolation = 'none')
-plt.title('test gt',fontsize= 20)
-#plt.show(block=True)
-# train
-c = np.reshape(output[:,:].cpu().detach().numpy(),(-1,len_trials-1,cell_nums))
-c = np.mean(c,0)
-plt.figure()
-plt.imshow(c.T,aspect = "auto",cmap = 'jet',vmin=-0.5,vmax=0.5,interpolation = 'none')
-plt.title('train pred',fontsize= 20)
-
-d = np.reshape(traces_trials_t[:,:],(-1,len_trials-1,cell_nums))
-d = np.mean(d,0)
-plt.figure()
-plt.imshow(d.T,aspect = "auto",cmap = 'jet',vmin=-0.5,vmax=0.5,interpolation = 'none')
-plt.title('train gt',fontsize= 20)
-plt.show(block=True)
-
-
 
 ############################PLOT latent dimensions
 import matplotlib
@@ -458,55 +431,3 @@ for k in range(output_latent_tp1_trials.shape[0]):
 import pandas as pd
 df=pd.DataFrame(dist_evolve_all)
 df.to_clipboard(index=False,header=False)
-
-#plot example
-k=1
-example=74
-tmp_trial_trajectory_r = np.zeros([random_num, local_evolve_num+1, 2])
-for i in range(random_num):
-    tmp_trial_trajectory_r[i, :, :] = tmp_trial_trajectory[indices[i]:indices[i] + 1 + local_evolve_num,:]
-
-start_point = tmp_trial_trajectory[indices]
-evolve_local_trajectory = np.zeros([random_num, local_evolve_num + 1, 2])
-evolve_local_trajectory[:, 0, :] = start_point
-for i in range(start_point.shape[0]):
-    for j in range(local_evolve_num):
-        tmp_latent = evolve_local_trajectory[i, j, :]
-        tmp_output_tp = model.decoder(torch.from_numpy(tmp_latent).to(dtype=torch.float).cuda())
-        tmp_output_tp = tmp_output_tp.cpu().detach().numpy()
-        tmp_latent_tp = model.encoder(torch.from_numpy(tmp_output_tp).to(dtype=torch.float).cuda())
-        evolve_local_trajectory[i, j + 1, :] = tmp_latent_tp.cpu().detach().numpy()
-
-num_pixel=30
-x_bottom=-0.8
-x_upper=0.05  #0.4
-y_bottom=-0.5 #-0.7
-y_upper=0.8
-x_range_one_grid=(x_upper-x_bottom)/num_pixel
-y_range_one_grid=(y_upper-y_bottom)/num_pixel
-x=np.linspace(x_bottom, x_upper, num=num_pixel, endpoint=True)
-y=np.linspace(y_bottom, y_upper, num=num_pixel, endpoint=True)
-xx, yy = np.meshgrid(x, y)
-xx_target=np.zeros(np.shape(xx))
-yy_target=np.zeros(np.shape(yy))
-
-for i in range(num_pixel):
-    for j in range(num_pixel):
-            tmp_latent=np.zeros([1,2])
-            tmp_latent[0, 0] = xx[i, j]
-            tmp_latent[0, 1] = yy[i, j]
-            tmp_output_tp = model.decoder(torch.from_numpy(tmp_latent).to(dtype=torch.float).cuda())
-            tmp_output_tp = tmp_output_tp.cpu().detach().numpy()
-            tmp_latent_tp= model.encoder(torch.from_numpy(tmp_output_tp).to(dtype=torch.float).cuda())
-            tmp_latent_tp= tmp_latent_tp.cpu().detach().numpy()
-            xx_target[i, j]=tmp_latent_tp[0, 0]-tmp_latent[0,0]
-            yy_target[i, j] = tmp_latent_tp[0, 1]-tmp_latent[0,1]
-
-fig, ax = plt.subplots()
-ax.quiver(xx,yy,xx_target,yy_target,color=[21/255,109/255,183/255],scale=5)
-plt.plot(tmp_trial_trajectory_r[example,:,0],tmp_trial_trajectory_r[example,:,1],c='r')
-plt.plot(evolve_local_trajectory[example,:,0],evolve_local_trajectory[example,:,1],c='b')
-ax.set_xlabel('LD1')
-ax.set_ylabel('LD2')
-plt.show(block=True)
-

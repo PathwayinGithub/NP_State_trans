@@ -1,8 +1,8 @@
-
 % PLSregression of wake to nrem sequence, same for NW
-addpath(genpath('~/code'));
+% results are saved as WN_sxx_PLS.mat or NW_sxx_PLS.mat
+% X_proj_trials are saved as WN_sxx_proj_x.mat/ NW_sxx_proj_x.mat
 subj='s74';
-filepath_main='~/';
+filepath_main='~\mice_example_data';
 load(strcat(filepath_main,'update_brain_region_for_fig1.mat'), strcat(subj,'_cluster_channel_br'),strcat(subj,'_cluster_channel_name'));
 load(strcat(filepath_main,subj,'_SVM2.mat'));
 eval(strcat('tmp_cluster_channel_br=',subj,'_cluster_channel_br(idx_good_presence,:);'));
